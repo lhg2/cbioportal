@@ -270,24 +270,25 @@ jobs:
           EMPTY_LIST_RESPONSE: "[]"
           SEARCH_STR: "entrezGeneId"
         run: |
-          kubectl exec -it ${{ steps.extract_pod_name.outputs.pod_name }} -- bash -c "curl --max-time $MAX_WAIT_TIME_IN_SECONDS -s -w '\n\n%{http_code}' -X POST '$URL' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{\"studyIds\": [ \"genie_public\" ]}'" > curl.out
-          RESPONSE_CODE=`tail -1 curl.out`
-          RESPONSE_BODY=`head -1 curl.out`
-          if [ "$RESPONSE_CODE" != "$OK_RESPONSE_CODE" ]; then
-            echo "Request failed with response code '$RESPONSE_CODE', expected '$OK_RESPONSE_CODE'"
-            exit 1
-          else
-            if [ "$RESPONSE_BODY" == "$EMPTY_LIST_RESPONSE" ] || [ -z "$RESPONSE_BODY" ]; then 
-                echo "Request failed with empty response"
-                exit 1
-            else
-                if [[ "$RESPONSE_BODY" != *"$SEARCH_STR"* ]]; then
-                    echo "Response did not contain search string '$SEARCH_STR'"
-                    exit 1
-                fi
-            fi
-            exit 0
-          fi
+          sh ./.github/k8s/curl.sh ${{ steps.extract_pod_name.outputs.pod_name }} 300 genie_public $URL 
+          #kubectl exec -it ${{ steps.extract_pod_name.outputs.pod_name }} -- bash -c "curl --max-time $MAX_WAIT_TIME_IN_SECONDS -s -w '\n\n%{http_code}' -X POST '$URL' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{\"studyIds\": [ \"genie_public\" ]}'" > curl.out
+          #RESPONSE_CODE=`tail -1 curl.out`
+          #RESPONSE_BODY=`head -1 curl.out`
+          #if [ "$RESPONSE_CODE" != "$OK_RESPONSE_CODE" ]; then
+          #  echo "Request failed with response code '$RESPONSE_CODE', expected '$OK_RESPONSE_CODE'"
+          #  exit 1
+          #else
+          #  if [ "$RESPONSE_BODY" == "$EMPTY_LIST_RESPONSE" ] || [ -z "$RESPONSE_BODY" ]; then 
+          #      echo "Request failed with empty response"
+          #      exit 1
+          #  else
+          #      if [[ "$RESPONSE_BODY" != *"$SEARCH_STR"* ]]; then
+          #          echo "Response did not contain search string '$SEARCH_STR'"
+          #          exit 1
+          #      fi
+          #  fi
+          #  exit 0
+          #fi
       - name: POST Request for /sample-list-counts endpoint
         env:
           MAX_WAIT_TIME_IN_SECONDS: 180 
